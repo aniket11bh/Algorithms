@@ -127,6 +127,7 @@ struct Node* Rebuild(struct Node* subtree, int size)
 	int A[size];
 	SortBST(subtree, A, size, 0);
 
+	cout << "\n";
 	subtree = destroy(subtree);
 	subtree = CreateBalancedBST(subtree, A, size);
 
@@ -134,7 +135,7 @@ struct Node* Rebuild(struct Node* subtree, int size)
 }
 
 // Insert the key a/c to BST insert, if the key is not present in the tree
-struct Node* InsertKey(struct Node* tree, int key, int* m, int* n, int rebuildPrintFlag)
+struct Node* InsertKey(struct Node* tree, int key, int* m, int* n)
 {
 	struct Node* new_node = NewNode(key);
 	int depth = 0;
@@ -160,38 +161,31 @@ struct Node* InsertKey(struct Node* tree, int key, int* m, int* n, int rebuildPr
 		{
 			temp = temp->left;
 		}
-		else if(key == temp->key)
-		{
-			temp = NULL;
-		}
 		depth++;
 	}
 
 	if(key > tempParent->key)
 	{
+
 		tempParent->right = new_node;
 		tempParent->right->parent = tempParent;
-		*n = *n + 1;
-		if(*m < *n) *m = *n;
 	}
 	else if(key < tempParent->key)
 	{
 		tempParent->left = new_node;
 		tempParent->left->parent = tempParent;
-		*n = *n + 1;
-		if(*m < *n) *m = *n;
 	}
+/*
 
 	float constraint1 = 1 + log(*n)/log(1.5);
 
 	if ((float)depth <= constraint1)
 	{
-		// printf("Balanced : %d, %f ",depth, constraint1);
-		// printf("\t");
+		// printf("Balanced : %d, %f \n",depth, constraint1);
 	}
 	else
 	{
-		// printf("UnBalanced : %d, %f ",depth, constraint1);
+		printf("UnBalanced : %d, %f ",depth, constraint1);
 		int subtree_size = 1;
 		int size_left = 0;
 		int size_right = 0;
@@ -220,15 +214,13 @@ struct Node* InsertKey(struct Node* tree, int key, int* m, int* n, int rebuildPr
 			tempParent = tempParent->parent;
 		}
 		while(((float)size_left <= 0.667*(float)subtree_size) && ((float)size_right <= 0.667*(float)subtree_size));
-		
-		if (rebuildPrintFlag )	printf("[R %d]", subtree_size);
 
 		prev_key = tempChild->key;
 		tempChild = Rebuild(tempChild, subtree_size);
 
-		// Join the rebuilded subtree with rest of the tree //
+		/* Join the rebuilded subtree with rest of the tree */
 		// Join on right side
-		if (prev_key > tempParent->key)
+	/*	if (prev_key > tempParent->key)
 		{
 			tempParent->right = tempChild;
 			tempChild->parent = tempParent;
@@ -240,25 +232,29 @@ struct Node* InsertKey(struct Node* tree, int key, int* m, int* n, int rebuildPr
 			tempParent->left = tempChild;
 			tempChild->parent = tempParent;
 		}
-	}
+	}*/
 	return tree;
 }
 
 struct Node* Find(struct Node* node, int key)
 {
 	// Tree is Empty, return NULL
-	if(node == NULL || node->key == key) return node;
+	if(node == NULL) return NULL;
 
 	// Otherwise get down to the correct location of key
 	if(key > node->key )
 	{
-		return Find(node->right, key);
+		node->right = Find(node->right, key);
+		node->right->parent = node;
 	}
 
 	else if(key < node->key)
 	{
-		return Find(node->left, key);
+		node->left = Find(node->left, key);
+		node->left->parent = node;
 	}
+
+	return node;
 }
 
 struct Node* FindMin(struct Node* node)
@@ -272,7 +268,7 @@ struct Node* FindMin(struct Node* node)
 		FindMin(node->left);
 }
 
-struct Node* DeleteKey(struct Node* tree, int key, int* n, int* m, int rebuildPrintFlag)
+struct Node* DeleteKey(struct Node* tree, int key, int* n, int* m)
 {
 	struct Node* temp = Find(tree, key);
 	struct Node* tempReplace;
@@ -284,32 +280,15 @@ struct Node* DeleteKey(struct Node* tree, int key, int* n, int* m, int rebuildPr
 		// If key is at leaf, simply delete the key
 		if (temp->left == NULL && temp->right == NULL)
 		{
-			if (temp->parent == NULL)
-				return NULL;
-			else if (key < temp->parent->key)
-				temp->parent->left = NULL;
-			else if(key > temp->parent->key)
-				temp->parent->right = NULL;
-
+			temp->parent = NULL;
 			delete(temp);
 		}
 
 		// If node containing the key contains exaclty one node
 		else if(temp->left == NULL || temp->right == NULL)
 		{
-	
-			if (temp->parent == NULL)
-			{
-				if (temp->right != NULL)
-					tree = temp->right;
-
-				else if (temp->left != NULL)
-					tree = temp->left;
-				tree->parent = NULL;
-			}
-
 			// If key is on right side of it's parent node
-			else if (key > temp->parent->key)
+			if (key > temp->parent->key)
 			{
 				if (temp->right != NULL)
 				{
@@ -355,10 +334,9 @@ struct Node* DeleteKey(struct Node* tree, int key, int* n, int* m, int rebuildPr
 		}
 
 		*n = *n - 1;
-
-		if (*n < 2.0/3.0*(*m))
-		{	
-			if (rebuildPrintFlag )	printf("[R %d]", *n);
+		if (*n < 0.667*(*m))
+		{
+			cout << "Rebuilding tree : \n";
 			tree = Rebuild(tree, *n);
 			*m = *n;
 		}
@@ -379,52 +357,24 @@ int main()
 
 	cout << "num_inps : ";
 	cin >> num_inps;
-	
-	// Read user input to enter in tree
-	cout << "Enter the numbers to insert keys: ";
+
+	// Read user input
+	cout << "Enter the numbers : ";
 	for(int i=0; i<num_inps; i++){
 		cin >> key;
 		// tree = Insert(tree, key);
-		tree = InsertKey(tree, key, &m, &n, 1);
+		tree = InsertKey(tree, key, &m, &n);
 		cout << " Height = " <<  height(tree) << ":  ";
 		InorderTraverse(tree);
 		cout << "\n";
 	}
 
 	cout << "\n";
-	cout << "num_inps : ";
-	cin >> num_inps;
 
-	// Read user input delete a key
-	cout << "Enter the numbers to delete keys: ";
-	for(int i=0; i<num_inps; i++){
-		cin >> key;
-		tree = DeleteKey(tree, key, &m, &n, 1);
-		cout << " Height = " <<  height(tree) << ":  ";
-		InorderTraverse(tree);
-		cout << "\n";
-	}
-	
+	cout << "size : "<< size(tree) << " height : "<< height(tree) << "\n";
 
-	cout << "Enter nins : ";
-	cin >> num_inps;
 
-	for(int i=1; i<=num_inps; i++)
-	{
-		tree = InsertKey(tree, i, &m, &n, 0);
-		if (i%100 == 0)
-			cout << " Height after " << i << "iterations : "<<  height(tree) << "\n";
-	}
-
-	cout << "Enter nins : ";
-	cin >> num_inps;
-
-	for(int i=1; i<=num_inps; i++)
-	{
-		tree = DeleteKey(tree, i, &m, &n, 0);
-		if (i%100 == 0)
-			cout << " Height after " << i << "iterations : "<<  height(tree) << "\n";
-	}
+	cout << "Height : " << height(tree) << "\n";
 
 	return 0;
 }
