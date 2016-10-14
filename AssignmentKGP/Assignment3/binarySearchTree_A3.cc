@@ -220,7 +220,7 @@ struct Node* InsertKey(struct Node* tree, int key, int* m, int* n, int rebuildPr
 			tempParent = tempParent->parent;
 		}
 		while(((float)size_left <= 0.667*(float)subtree_size) && ((float)size_right <= 0.667*(float)subtree_size));
-		
+
 		if (rebuildPrintFlag )	printf("[R %d]", subtree_size);
 
 		prev_key = tempChild->key;
@@ -297,7 +297,7 @@ struct Node* DeleteKey(struct Node* tree, int key, int* n, int* m, int rebuildPr
 		// If node containing the key contains exaclty one node
 		else if(temp->left == NULL || temp->right == NULL)
 		{
-	
+
 			if (temp->parent == NULL)
 			{
 				if (temp->right != NULL)
@@ -357,7 +357,7 @@ struct Node* DeleteKey(struct Node* tree, int key, int* n, int* m, int rebuildPr
 		*n = *n - 1;
 
 		if (*n < 2.0/3.0*(*m))
-		{	
+		{
 			if (rebuildPrintFlag )	printf("[R %d]", *n);
 			tree = Rebuild(tree, *n);
 			*m = *n;
@@ -379,7 +379,7 @@ int main()
 
 	cout << "num_inps : ";
 	cin >> num_inps;
-	
+
 	// Read user input to enter in tree
 	cout << "Enter the numbers to insert keys: ";
 	for(int i=0; i<num_inps; i++){
@@ -404,7 +404,7 @@ int main()
 		InorderTraverse(tree);
 		cout << "\n";
 	}
-	
+
 
 	cout << "Enter nins : ";
 	cin >> num_inps;
